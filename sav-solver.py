@@ -46,23 +46,22 @@ basis_val_at_quad_pnt = np.zeros((N_V, QUAD_PNTS))
 grad_basis_val_at_quad_pnt = np.zeros((N_V, DIM, QUAD_PNTS))
 quad_wghts = np.zeros((QUAD_PNTS,))
 
-for loc_nd_ind in range(N_V):
-    for quad_pnt_ind_x in range(QUAD_ORDER):
-        for quad_pnt_ind_y in range(QUAD_ORDER):
-            quad_pnt_ind = quad_pnt_ind_y * QUAD_ORDER + quad_pnt_ind_x
-            x, y = QUAD_CORD[quad_pnt_ind_x], QUAD_CORD[quad_pnt_ind_y]
-            grad_basis_val_at_quad_pnt[loc_nd_ind, :, quad_pnt_ind] = (
-                get_grad_basis_val(loc_nd_ind, x, y)
-            )
-            basis_val_at_quad_pnt[loc_nd_ind, quad_pnt_ind] = get_basis_val(
-                loc_nd_ind, x, y
-            )
-            quad_wghts[quad_pnt_ind] = (
-                QUAD_WGHT[quad_pnt_ind_x] * QUAD_WGHT[quad_pnt_ind_y]
-            )
+for loc_nd_ind, quad_pnt_ind_x, quad_pnt_ind_y in product(
+    range(N_V), range(QUAD_ORDER), range(QUAD_ORDER)
+):
+    quad_pnt_ind = quad_pnt_ind_y * QUAD_ORDER + quad_pnt_ind_x
+    x, y = QUAD_CORD[quad_pnt_ind_x], QUAD_CORD[quad_pnt_ind_y]
+    basis_val_at_quad_pnt[loc_nd_ind, quad_pnt_ind] = get_basis_val(loc_nd_ind, x, y)
+    grad_basis_val_at_quad_pnt[loc_nd_ind, :, quad_pnt_ind] = get_grad_basis_val(
+        loc_nd_ind, x, y
+    )
+    quad_wghts[quad_pnt_ind] = QUAD_WGHT[quad_pnt_ind_x] * QUAD_WGHT[quad_pnt_ind_y]
+
 
 # \varepsilon(u) [0:8, 0:3, :]
 strain_val_at_quad_pnt = np.zeros((N_V * DIM, STRAIN_DOF, QUAD_PNTS))
+# \div u [0:8, :]
+div_val_at_quad_pnt = np.zeros((N_V * DIM, QUAD_PNTS))
 for loc_nd_ind in range(N_V):
     # (u1, u2) = (phi, 0)
     strain_val_at_quad_pnt[loc_nd_ind * DIM, 0, :] = grad_basis_val_at_quad_pnt[
@@ -71,6 +70,9 @@ for loc_nd_ind in range(N_V):
     strain_val_at_quad_pnt[loc_nd_ind * DIM, 2, :] = (
         0.5 * grad_basis_val_at_quad_pnt[loc_nd_ind, 1, :]
     )
+    div_val_at_quad_pnt[loc_nd_ind * DIM, :] = grad_basis_val_at_quad_pnt[
+        loc_nd_ind, 0, :
+    ]
     # (u1, u2) = (0, phi)
     strain_val_at_quad_pnt[loc_nd_ind * DIM + 1, 1, :] = grad_basis_val_at_quad_pnt[
         loc_nd_ind, 1, :
@@ -78,18 +80,10 @@ for loc_nd_ind in range(N_V):
     strain_val_at_quad_pnt[loc_nd_ind * DIM + 1, 2, :] = (
         0.5 * grad_basis_val_at_quad_pnt[loc_nd_ind, 0, :]
     )
-
-# \div u [0:8, :]
-div_val_at_quad_pnt = np.zeros((N_V * DIM, QUAD_PNTS))
-for loc_nd_ind in range(N_V):
-    # (u1, u2) = (phi, 0)
-    div_val_at_quad_pnt[loc_nd_ind * DIM, :] = grad_basis_val_at_quad_pnt[
-        loc_nd_ind, 0, :
-    ]
-    # (u1, u2) = (0, phi)
     div_val_at_quad_pnt[loc_nd_ind * DIM + 1, :] = grad_basis_val_at_quad_pnt[
         loc_nd_ind, 1, :
     ]
+
 
 # Element integral \int \grad(p) \cdot \grad(q)
 elem_Laplace_stiff_mat = np.zeros((N_V, N_V))
@@ -107,6 +101,7 @@ for loc_nd_i, loc_nd_j in product(range(N_V), range(N_V)):
         basis_val_at_quad_pnt[loc_nd_i, :] * basis_val_at_quad_pnt[loc_nd_j, :],
         quad_wghts,
     )
+
 # Val \varepsilon(u) : \varepsilon(v) at quad points
 ela_mu_stiff_at_quad_pnt = np.zeros((N_V * DIM, N_V * DIM, QUAD_PNTS))
 # Element integral \int \varepsilon(u) : \varepsilon(v)
@@ -191,8 +186,8 @@ class Solver:
 
         self.h = 1.0 / N
         self.tau = 1.0 / steps
-        self.dof_phi_theta_num = 2 * (N + 1) ** 2
-        self.dof_ela_num = 2 * (N - 1) ** 2
+        self.dof_phi_theta_num = 2 * (N + 1) ** DIM
+        self.dof_ela_num = DIM * (N - 1) ** DIM
 
         max_data_len = self.N * self.N * N_V**2
         II = -np.ones((max_data_len,), dtype=np.int32)
@@ -376,7 +371,6 @@ class Solver:
                     marker += 1
                 # Get loc rhs
                 # rhs_{phi}
-
                 rhs[loc_nds[loc_nd_row] * 2] += (
                     self.alpha
                     / self.tau

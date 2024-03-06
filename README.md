@@ -1,1 +1,1 @@
-This is a Python implementation for SAV solvers on a stereolithography model.
+This is a Python implementation for a SAV solver on a stereolithography model.
