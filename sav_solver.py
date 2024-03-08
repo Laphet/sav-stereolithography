@@ -137,6 +137,11 @@ class Solver:
         return x**3 - x
 
     @staticmethod
+    def P_func(x):
+        return 0.5 * (1.0 - x)
+
+    # p is the derivative of P
+    @staticmethod
     def p_func(x):
         return -0.5
 
@@ -146,9 +151,9 @@ class Solver:
         else:
             return (phi - self.phi_gel) / (1.0 - self.phi_gel)
 
-    @staticmethod
-    def m(x):
-        return x + 1.0
+    # m = zeta * (1 - P)
+    def m(self, x):
+        return (x + 1.0) * 0.5 * self.zeta
 
     def __init__(
         self,
@@ -164,6 +169,7 @@ class Solver:
         phi_gel: float = 0.5,
         E: float = 1.0,
         nu: float = 0.3,
+        zeta: float = 1.0,
         beta: float = 1.0,
     ):
         self.N = N
@@ -180,6 +186,7 @@ class Solver:
         self.phi_gel = phi_gel
         self.E = E
         self.nu = nu
+        self.zeta = zeta
         self.beta = beta
         self.lamb_3d = self.E * self.nu / ((1.0 + self.nu) * (1.0 - 2.0 * self.nu))
         self.mu = self.E / (2.0 * (1.0 + self.nu))
@@ -229,8 +236,7 @@ class Solver:
         # To construct the exact solution
         self.phi_source_func = lambda x, y, t: 0.0
         self.theta_source_func = lambda x, y, t: 0.0
-        self.ux_source_func = lambda x, y, t: 0.0
-        self.uy_source_func = lambda x, y, t: 0.0
+        self.u_source_func = lambda x, y, t: 0.0, 0.0
 
     # A quick way to get Q
     def get_Q(self, phi_theta: np.ndarray):
@@ -459,6 +465,9 @@ class Solver:
         return (elem_ind_y + loc_nd_y - 1) * (self.N - 1) + elem_ind_x + loc_nd_x - 1
 
     def get_next_u(self, phi_theta: np.ndarray, phi_theta_0: np.ndarray, n: int):
+        # the function k contains "if"
+        k_vec = np.vectorize(self.k)
+
         max_data_len = self.N**2 * 64
         II = -np.ones(max_data_len, dtype=np.int32)
         JJ = -np.ones(max_data_len, dtype=np.int32)
@@ -467,7 +476,7 @@ class Solver:
         rhs = np.zeros((self.dof_ela_num,))
 
         marker = 0
-        for elem_ind_x, elem_ind_y in product(range(self.N), range(self.N)):
+        for elem_ind_y, elem_ind_x in product(range(self.N), range(self.N)):
             loc_nds = [
                 elem_ind_y * (self.N + 1) + elem_ind_x,
                 elem_ind_y * (self.N + 1) + elem_ind_x + 1,
@@ -478,48 +487,34 @@ class Solver:
             loc_theta = np.array([phi_theta[2 * loc_nd + 1] for loc_nd in loc_nds])
             loc_theta_0 = np.array([phi_theta_0[2 * loc_nd + 1] for loc_nd in loc_nds])
 
-            k_phi_at_quad_pnt = self.k(loc_phi @ basis_val_at_quad_pnt)
+            k_phi_at_quad_pnt = k_vec(loc_phi @ basis_val_at_quad_pnt)
             m_phi_at_quad_pnt = self.m(loc_phi @ basis_val_at_quad_pnt)
             theta_theta_0_at_quad_pnt = (
                 loc_theta - loc_theta_0
             ) @ basis_val_at_quad_pnt
+            z_at_quad_pnt = self.kappa + (1.0 - k_phi_at_quad_pnt) * (1.0 - self.kappa)
 
-            loc_ux_source = np.array(
+            loc_u_source = np.array(
                 [
-                    self.ux_source_func(
+                    self.u_source_func(
                         elem_ind_x * self.h, elem_ind_y * self.h, n * self.tau
                     ),
-                    self.ux_source_func(
+                    self.u_source_func(
                         (elem_ind_x + 1) * self.h, elem_ind_y * self.h, n * self.tau
                     ),
-                    self.ux_source_func(
+                    self.u_source_func(
                         elem_ind_x * self.h, (elem_ind_y + 1) * self.h, n * self.tau
                     ),
-                    self.ux_source_func(
+                    self.u_source_func(
                         (elem_ind_x + 1) * self.h,
                         (elem_ind_y + 1) * self.h,
                         n * self.tau,
                     ),
                 ]
             )
-            loc_uy_source = np.array(
-                [
-                    self.uy_source_func(
-                        elem_ind_x * self.h, elem_ind_y * self.h, n * self.tau
-                    ),
-                    self.uy_source_func(
-                        (elem_ind_x + 1) * self.h, elem_ind_y * self.h, n * self.tau
-                    ),
-                    self.uy_source_func(
-                        elem_ind_x * self.h, (elem_ind_y + 1) * self.h, n * self.tau
-                    ),
-                    self.uy_source_func(
-                        (elem_ind_x + 1) * self.h,
-                        (elem_ind_y + 1) * self.h,
-                        n * self.tau,
-                    ),
-                ]
-            )
+            loc_ux_source = loc_u_source[:, 0]
+            loc_uy_source = loc_u_source[:, 1]
+
             for loc_nd_row in range(N_V):
                 nd_row = self.get_nd_ind(elem_ind_x, elem_ind_y, loc_nd_row)
                 if nd_row >= 0:
@@ -530,19 +525,16 @@ class Solver:
                             II[marker] = nd_row * 2
                             JJ[marker] = nd_col * 2
                             VV[marker] = np.dot(
-                                (
-                                    self.kappa
-                                    + (1.0 - k_phi_at_quad_pnt) * (1.0 - self.kappa)
-                                )
+                                z_at_quad_pnt
                                 * (
                                     2.0
                                     * self.mu
                                     * ela_mu_stiff_at_quad_pnt[
-                                        nd_row * 2, nd_col * 2, :
+                                        loc_nd_row * 2, loc_nd_col * 2, :
                                     ]
                                     + self.lamb_3d
                                     * ela_lambda_stiff_at_quad_pnt[
-                                        nd_row * 2, nd_col * 2, :
+                                        loc_nd_row * 2, loc_nd_col * 2, :
                                     ]
                                 ),
                                 quad_wghts,
@@ -552,19 +544,16 @@ class Solver:
                             II[marker] = nd_row * 2
                             JJ[marker] = nd_col * 2 + 1
                             VV[marker] = np.dot(
-                                (
-                                    self.kappa
-                                    + (1.0 - k_phi_at_quad_pnt) * (1.0 - self.kappa)
-                                )
+                                z_at_quad_pnt
                                 * (
                                     2.0
                                     * self.mu
                                     * ela_mu_stiff_at_quad_pnt[
-                                        nd_row * 2, nd_col * 2 + 1, :
+                                        loc_nd_row * 2, loc_nd_col * 2 + 1, :
                                     ]
                                     + self.lamb_3d
                                     * ela_lambda_stiff_at_quad_pnt[
-                                        nd_row * 2, nd_col * 2 + 1, :
+                                        loc_nd_row * 2, loc_nd_col * 2 + 1, :
                                     ]
                                 ),
                                 quad_wghts,
@@ -574,19 +563,16 @@ class Solver:
                             II[marker] = nd_row * 2 + 1
                             JJ[marker] = nd_col * 2
                             VV[marker] += np.dot(
-                                (
-                                    self.kappa
-                                    + (1.0 - k_phi_at_quad_pnt) * (1.0 - self.kappa)
-                                )
+                                z_at_quad_pnt
                                 * (
                                     2.0
                                     * self.mu
                                     * ela_mu_stiff_at_quad_pnt[
-                                        nd_row * 2 + 1, nd_col * 2, :
+                                        loc_nd_row * 2 + 1, loc_nd_col * 2, :
                                     ]
                                     + self.lamb_3d
                                     * ela_lambda_stiff_at_quad_pnt[
-                                        nd_row * 2 + 1, nd_col * 2, :
+                                        loc_nd_row * 2 + 1, loc_nd_col * 2, :
                                     ]
                                 ),
                                 quad_wghts,
@@ -596,19 +582,16 @@ class Solver:
                             II[marker] = nd_row * 2 + 1
                             JJ[marker] = nd_col * 2 + 1
                             VV[marker] = np.dot(
-                                (
-                                    self.kappa
-                                    + (1.0 - k_phi_at_quad_pnt) * (1.0 - self.kappa)
-                                )
+                                z_at_quad_pnt
                                 * (
                                     2.0
                                     * self.mu
                                     * ela_mu_stiff_at_quad_pnt[
-                                        nd_row * 2 + 1, nd_col * 2 + 1, :
+                                        loc_nd_row * 2 + 1, loc_nd_col * 2 + 1, :
                                     ]
                                     + self.lamb_3d
                                     * ela_lambda_stiff_at_quad_pnt[
-                                        nd_row * 2 + 1, nd_col * 2 + 1, :
+                                        loc_nd_row * 2 + 1, loc_nd_col * 2 + 1, :
                                     ]
                                 ),
                                 quad_wghts,
@@ -616,22 +599,20 @@ class Solver:
                             marker += 1
                     # Get loc rhs
                     # rhs_{x}
-                    rhs[nd_row * 2] += np.dot(
-                        k_phi_at_quad_pnt
-                        * (m_phi_at_quad_pnt - self.beta * theta_theta_0_at_quad_pnt)
-                        * 2.0
-                        * (self.mu + self.lamb_3d)
-                        * div_val_at_quad_pnt[nd_row * 2, :],
-                        quad_wghts,
-                    )
-                    rhs[nd_row * 2] += np.dot(
-                        (1.0 - k_phi_at_quad_pnt)
-                        * (m_phi_at_quad_pnt - self.beta * theta_theta_0_at_quad_pnt)
-                        * 2.0
-                        * self.kappa
-                        * (self.mu + self.lamb_3d)
-                        * div_val_at_quad_pnt[nd_row * 2, :],
-                        quad_wghts,
+                    rhs[nd_row * 2] += (
+                        np.dot(
+                            z_at_quad_pnt
+                            * (
+                                m_phi_at_quad_pnt
+                                - self.beta * theta_theta_0_at_quad_pnt
+                            )
+                            * 2.0
+                            * (self.mu + self.lamb_3d)
+                            * div_val_at_quad_pnt[loc_nd_row * 2, :],
+                            quad_wghts,
+                        )
+                        * 0.5
+                        * self.h
                     )
                     rhs[nd_row * 2] += (
                         np.dot(elem_bilinear_mass_mat[loc_nd_row, :], loc_ux_source)
@@ -639,22 +620,20 @@ class Solver:
                         * self.h**2
                     )
                     # rhs_{y}
-                    rhs[nd_row * 2 + 1] += np.dot(
-                        k_phi_at_quad_pnt
-                        * (m_phi_at_quad_pnt - self.beta * theta_theta_0_at_quad_pnt)
-                        * 2.0
-                        * (self.mu + self.lamb_3d)
-                        * div_val_at_quad_pnt[nd_row * 2 + 1, :],
-                        quad_wghts,
-                    )
-                    rhs[nd_row * 2 + 1] += np.dot(
-                        (1.0 - k_phi_at_quad_pnt)
-                        * (m_phi_at_quad_pnt - self.beta * theta_theta_0_at_quad_pnt)
-                        * 2.0
-                        * self.kappa
-                        * (self.mu + self.lamb_3d)
-                        * div_val_at_quad_pnt[nd_row * 2 + 1, :],
-                        quad_wghts,
+                    rhs[nd_row * 2 + 1] += (
+                        np.dot(
+                            z_at_quad_pnt
+                            * (
+                                m_phi_at_quad_pnt
+                                - self.beta * theta_theta_0_at_quad_pnt
+                            )
+                            * 2.0
+                            * (self.mu + self.lamb_3d)
+                            * div_val_at_quad_pnt[loc_nd_row * 2 + 1, :],
+                            quad_wghts,
+                        )
+                        * 0.5
+                        * self.h
                     )
                     rhs[nd_row * 2 + 1] += (
                         np.dot(elem_bilinear_mass_mat[loc_nd_row, :], loc_uy_source)
@@ -664,7 +643,7 @@ class Solver:
         # Construct the matrix
         A_mat = csc_matrix(
             (VV[:marker], (II[:marker], JJ[:marker])),
-            shape=(self.dof_phi_theta_num, self.dof_phi_theta_num),
+            shape=(self.dof_ela_num, self.dof_ela_num),
         )
         u = spsolve(A_mat, rhs)
         return u
