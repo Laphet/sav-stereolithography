@@ -257,126 +257,140 @@ def get_u_ext(u: np.ndarray, N):
 
 
 if __name__ == "__main__":
-    N, steps = 32, 10
+    N_list = [8, 16, 32, 64, 128]
+    N_list_s = [100, 200]
+    steps_list = [10, 20, 40, 80, 160]
+    steps_list_s = [100, 200]
+
+    # N, steps = 32, 10
     # Get command line arguments
-    import argparse
+    # import argparse
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "N", type=int, help="Number of elements in one direction", default=32
-    )
-    parser.add_argument("steps", type=int, help="Number of time steps", default=10)
-    args = parser.parse_args()
-    N, steps = args.N, args.steps
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument(
+    #     "N", type=int, help="Number of elements in one direction", default=32
+    # )
+    # parser.add_argument("steps", type=int, help="Number of time steps", default=10)
+    # args = parser.parse_args()
+    # N, steps = args.N, args.steps
 
-    sav_solver = Solver(
-        N,
-        steps,
-        ref_alpha,
-        ref_lambda_,
-        ref_epsilon,
-        ref_gamma,
-        ref_theta_c,
-        ref_delta,
-        ref_kappa,
-        ref_phi_gel,
-        ref_E,
-        ref_nu,
-        ref_zeta,
-        ref_beta,
-    )
-    sav_solver.phi_source_func = ref_phi_source_func
-    sav_solver.theta_source_func = ref_theta_source_func
-    sav_solver.u_source_func = ref_u_source_func
-
-    phi_theta_0 = get_ref_phi_theta_discrete(sav_solver, 0.0)
-    q_0 = sav_solver.get_Q(phi_theta_0)
-
-    phi_theta_ = np.zeros((sav_solver.dof_phi_theta_num))
-    phi_theta = np.zeros((sav_solver.dof_phi_theta_num))
-    q_, q = 0.0, 0.0
-
-    phi_theta_[:] = phi_theta_0[:]
-    q_ = sav_solver.get_Q(phi_theta_0)
-
-    error_phi = np.zeros((sav_solver.steps, 2))
-    error_theta = np.zeros((sav_solver.steps, 2))
-    error_ux = np.zeros((sav_solver.steps, 2))
-    error_uy = np.zeros((sav_solver.steps, 2))
-
-    prg_bar = 0.0
-    for i in range(1, sav_solver.steps + 1):
-        # Give phi, theta, q
-        phi_theta, q = sav_solver.get_next_phi_theta_q(phi_theta_, q_, i)
-        # Calculate reference phi and theta
-        phi_theta_ref = get_ref_phi_theta_discrete(sav_solver, i * sav_solver.tau)
-        # Calculate phi and theta errors
-        diff_phi_theta = phi_theta - phi_theta_ref
-        error_phi[i - 1, 0] = np.sqrt(
-            np.dot(sav_solver.mass_mat.dot(diff_phi_theta[::2]), diff_phi_theta[::2])
+    for N, steps in product(N_list, steps_list):
+        sav_solver = Solver(
+            N,
+            steps,
+            ref_alpha,
+            ref_lambda_,
+            ref_epsilon,
+            ref_gamma,
+            ref_theta_c,
+            ref_delta,
+            ref_kappa,
+            ref_phi_gel,
+            ref_E,
+            ref_nu,
+            ref_zeta,
+            ref_beta,
         )
-        error_phi[i - 1, 1] = np.sqrt(
-            np.dot(sav_solver.stiff_mat.dot(diff_phi_theta[::2]), diff_phi_theta[::2])
-        )
-        error_theta[i - 1, 0] = np.sqrt(
-            np.dot(sav_solver.mass_mat.dot(diff_phi_theta[1::2]), diff_phi_theta[1::2])
-        )
-        error_theta[i - 1, 1] = np.sqrt(
-            np.dot(sav_solver.stiff_mat.dot(diff_phi_theta[1::2]), diff_phi_theta[1::2])
-        )
+        sav_solver.phi_source_func = ref_phi_source_func
+        sav_solver.theta_source_func = ref_theta_source_func
+        sav_solver.u_source_func = ref_u_source_func
 
-        # Get u
-        u = sav_solver.get_next_u(phi_theta, phi_theta_0, i)
-        # Calculate reference u
-        u_ref = get_ref_u_discrete(sav_solver, i * sav_solver.tau)
-        # Calculate u errors
-        diff_u = u - u_ref
-        diff_ux_ext = get_u_ext(diff_u[::2], sav_solver.N)
-        diff_uy_ext = get_u_ext(diff_u[1::2], sav_solver.N)
-        error_ux[i - 1, 0] = np.sqrt(
-            np.dot(sav_solver.mass_mat.dot(diff_ux_ext), diff_ux_ext)
-        )
-        error_ux[i - 1, 1] = np.sqrt(
-            np.dot(sav_solver.stiff_mat.dot(diff_ux_ext), diff_ux_ext)
-        )
-        error_uy[i - 1, 0] = np.sqrt(
-            np.dot(sav_solver.mass_mat.dot(diff_uy_ext), diff_uy_ext)
-        )
-        error_uy[i - 1, 1] = np.sqrt(
-            np.dot(sav_solver.stiff_mat.dot(diff_uy_ext), diff_uy_ext)
-        )
+        phi_theta_0 = get_ref_phi_theta_discrete(sav_solver, 0.0)
+        q_0 = sav_solver.get_Q(phi_theta_0)
 
-        # Show progress
-        if (i / sav_solver.steps) > prg_bar:
-            prg_bar += 0.1
-            print(
-                "{0:s}\tprogress: {1:3.0f}%".format(
-                    datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
-                    i / sav_solver.steps * 100.0,
+        phi_theta_ = np.zeros((sav_solver.dof_phi_theta_num))
+        phi_theta = np.zeros((sav_solver.dof_phi_theta_num))
+        q_, q = 0.0, 0.0
+
+        phi_theta_[:] = phi_theta_0[:]
+        q_ = sav_solver.get_Q(phi_theta_0)
+
+        error_phi = np.zeros((sav_solver.steps, 2))
+        error_theta = np.zeros((sav_solver.steps, 2))
+        error_ux = np.zeros((sav_solver.steps, 2))
+        error_uy = np.zeros((sav_solver.steps, 2))
+
+        prg_bar = 0.0
+        for i in range(1, sav_solver.steps + 1):
+            # Give phi, theta, q
+            phi_theta, q = sav_solver.get_next_phi_theta_q(phi_theta_, q_, i)
+            # Calculate reference phi and theta
+            phi_theta_ref = get_ref_phi_theta_discrete(sav_solver, i * sav_solver.tau)
+            # Calculate phi and theta errors
+            diff_phi_theta = phi_theta - phi_theta_ref
+            error_phi[i - 1, 0] = np.sqrt(
+                np.dot(
+                    sav_solver.mass_mat.dot(diff_phi_theta[::2]), diff_phi_theta[::2]
+                )
+            )
+            error_phi[i - 1, 1] = np.sqrt(
+                np.dot(
+                    sav_solver.stiff_mat.dot(diff_phi_theta[::2]), diff_phi_theta[::2]
+                )
+            )
+            error_theta[i - 1, 0] = np.sqrt(
+                np.dot(
+                    sav_solver.mass_mat.dot(diff_phi_theta[1::2]), diff_phi_theta[1::2]
+                )
+            )
+            error_theta[i - 1, 1] = np.sqrt(
+                np.dot(
+                    sav_solver.stiff_mat.dot(diff_phi_theta[1::2]), diff_phi_theta[1::2]
                 )
             )
 
-        # Update variables
-        q_ = q
-        phi_theta_ = phi_theta
+            # Get u
+            u = sav_solver.get_next_u(phi_theta, phi_theta_0, i)
+            # Calculate reference u
+            u_ref = get_ref_u_discrete(sav_solver, i * sav_solver.tau)
+            # Calculate u errors
+            diff_u = u - u_ref
+            diff_ux_ext = get_u_ext(diff_u[::2], sav_solver.N)
+            diff_uy_ext = get_u_ext(diff_u[1::2], sav_solver.N)
+            error_ux[i - 1, 0] = np.sqrt(
+                np.dot(sav_solver.mass_mat.dot(diff_ux_ext), diff_ux_ext)
+            )
+            error_ux[i - 1, 1] = np.sqrt(
+                np.dot(sav_solver.stiff_mat.dot(diff_ux_ext), diff_ux_ext)
+            )
+            error_uy[i - 1, 0] = np.sqrt(
+                np.dot(sav_solver.mass_mat.dot(diff_uy_ext), diff_uy_ext)
+            )
+            error_uy[i - 1, 1] = np.sqrt(
+                np.dot(sav_solver.stiff_mat.dot(diff_uy_ext), diff_uy_ext)
+            )
 
-    print(
-        "Max error phi:  \tin l_2={0:6e}, in h_1={1:6e}".format(
-            np.max(error_phi[:, 0]), np.max(error_phi[:, 1])
+            # Show progress
+            if (i / sav_solver.steps) > prg_bar:
+                prg_bar += 0.1
+                print(
+                    "{0:s}\tprogress: {1:3.0f}%".format(
+                        datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+                        i / sav_solver.steps * 100.0,
+                    )
+                )
+
+            # Update variables
+            q_ = q
+            phi_theta_ = phi_theta
+
+        print(
+            "Max error phi:  \tin l_2={0:6e}, in h_1={1:6e}".format(
+                np.max(error_phi[:, 0]), np.max(error_phi[:, 1])
+            )
         )
-    )
-    print(
-        "Max error theta:\tin l_2={0:6e}, in h_1={1:6e}".format(
-            np.max(error_theta[:, 0]), np.max(error_theta[:, 1])
+        print(
+            "Max error theta:\tin l_2={0:6e}, in h_1={1:6e}".format(
+                np.max(error_theta[:, 0]), np.max(error_theta[:, 1])
+            )
         )
-    )
-    print(
-        "Max error ux:   \tin l_2={0:6e}, in h_1={1:6e}".format(
-            np.max(error_ux[:, 0]), np.max(error_ux[:, 1])
+        print(
+            "Max error ux:   \tin l_2={0:6e}, in h_1={1:6e}".format(
+                np.max(error_ux[:, 0]), np.max(error_ux[:, 1])
+            )
         )
-    )
-    print(
-        "Max error uy:   \tin l_2={0:6e}, in h_1={1:6e}".format(
-            np.max(error_uy[:, 0]), np.max(error_uy[:, 1])
+        print(
+            "Max error uy:   \tin l_2={0:6e}, in h_1={1:6e}".format(
+                np.max(error_uy[:, 0]), np.max(error_uy[:, 1])
+            )
         )
-    )
