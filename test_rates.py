@@ -10,12 +10,12 @@ ref_gamma = 1.0
 ref_theta_c = 0.0
 ref_delta = 1.2
 
-ref_kappa = 0.5
+ref_kappa = 0.01
 ref_phi_gel = 0.5
 ref_E = 1.0
 ref_nu = 0.3
 ref_zeta = 1.0
-ref_beta = 1.0
+ref_beta = 0.5
 
 ref_lamb_3d = ref_E * ref_nu / ((1.0 + ref_nu) * (1.0 - 2.0 * ref_nu))
 ref_mu = ref_E / (2.0 * (1.0 + ref_nu))
@@ -30,11 +30,11 @@ def ref_dt_phi_func(x, y, t):
 
 
 def ref_dx_phi_func(x, y, t):
-    return -np.sin(t) * 2.0 * np.pi * np.sin(2.0 * np.pi * x) * np.cos(np.pi * y)
+    return -np.cos(t) * 2.0 * np.pi * np.sin(2.0 * np.pi * x) * np.cos(np.pi * y)
 
 
 def ref_dy_phi_func(x, y, t):
-    return -np.sin(t) * np.pi * np.cos(2.0 * np.pi * x) * np.sin(np.pi * y)
+    return -np.cos(t) * np.pi * np.cos(2.0 * np.pi * x) * np.sin(np.pi * y)
 
 
 def ref_laplace_phi_func(x, y, t):
@@ -257,7 +257,18 @@ def get_u_ext(u: np.ndarray, N):
 
 
 if __name__ == "__main__":
-    N, steps = 16, 10
+    N, steps = 32, 10
+    # Get command line arguments
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "N", type=int, help="Number of elements in one direction", default=32
+    )
+    parser.add_argument("steps", type=int, help="Number of time steps", default=10)
+    args = parser.parse_args()
+    N, steps = args.N, args.steps
+
     sav_solver = Solver(
         N,
         steps,

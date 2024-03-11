@@ -43,7 +43,7 @@ def get_grad_basis_val(loc_ind: int, x: float, y: float):
 
 
 basis_val_at_quad_pnt = np.zeros((N_V, QUAD_PNTS))
-grad_basis_val_at_quad_pnt = np.zeros((N_V, DIM, QUAD_PNTS))
+grad_basis_val_at_quad_pnt = np.zeros((N_V, 2, QUAD_PNTS))
 quad_wghts = np.zeros((QUAD_PNTS,))
 
 for loc_nd_ind, quad_pnt_ind_x, quad_pnt_ind_y in product(
@@ -59,28 +59,28 @@ for loc_nd_ind, quad_pnt_ind_x, quad_pnt_ind_y in product(
 
 
 # \varepsilon(u) [0:8, 0:3, :]
-strain_val_at_quad_pnt = np.zeros((N_V * DIM, STRAIN_DOF, QUAD_PNTS))
+strain_val_at_quad_pnt = np.zeros((N_V * 2, STRAIN_DOF, QUAD_PNTS))
 # \div u [0:8, :]
-div_val_at_quad_pnt = np.zeros((N_V * DIM, QUAD_PNTS))
+div_val_at_quad_pnt = np.zeros((N_V * 2, QUAD_PNTS))
 for loc_nd_ind in range(N_V):
     # (u1, u2) = (phi, 0)
-    strain_val_at_quad_pnt[loc_nd_ind * DIM, 0, :] = grad_basis_val_at_quad_pnt[
+    strain_val_at_quad_pnt[loc_nd_ind * 2, 0, :] = grad_basis_val_at_quad_pnt[
         loc_nd_ind, 0, :
     ]
-    strain_val_at_quad_pnt[loc_nd_ind * DIM, 2, :] = (
+    strain_val_at_quad_pnt[loc_nd_ind * 2, 2, :] = (
         0.5 * grad_basis_val_at_quad_pnt[loc_nd_ind, 1, :]
     )
-    div_val_at_quad_pnt[loc_nd_ind * DIM, :] = grad_basis_val_at_quad_pnt[
+    div_val_at_quad_pnt[loc_nd_ind * 2, :] = grad_basis_val_at_quad_pnt[
         loc_nd_ind, 0, :
     ]
     # (u1, u2) = (0, phi)
-    strain_val_at_quad_pnt[loc_nd_ind * DIM + 1, 1, :] = grad_basis_val_at_quad_pnt[
+    strain_val_at_quad_pnt[loc_nd_ind * 2 + 1, 1, :] = grad_basis_val_at_quad_pnt[
         loc_nd_ind, 1, :
     ]
-    strain_val_at_quad_pnt[loc_nd_ind * DIM + 1, 2, :] = (
+    strain_val_at_quad_pnt[loc_nd_ind * 2 + 1, 2, :] = (
         0.5 * grad_basis_val_at_quad_pnt[loc_nd_ind, 0, :]
     )
-    div_val_at_quad_pnt[loc_nd_ind * DIM + 1, :] = grad_basis_val_at_quad_pnt[
+    div_val_at_quad_pnt[loc_nd_ind * 2 + 1, :] = grad_basis_val_at_quad_pnt[
         loc_nd_ind, 1, :
     ]
 
@@ -103,27 +103,25 @@ for loc_nd_i, loc_nd_j in product(range(N_V), range(N_V)):
     )
 
 # Val \varepsilon(u) : \varepsilon(v) at quad points
-ela_mu_stiff_at_quad_pnt = np.zeros((N_V * DIM, N_V * DIM, QUAD_PNTS))
-# Element integral \int \varepsilon(u) : \varepsilon(v)
-elem_ela_mu_stiff_mat = np.zeros((N_V * DIM, N_V * DIM))
+ela_mu_stiff_at_quad_pnt = np.zeros((N_V * 2, N_V * 2, QUAD_PNTS))
 # Val \div(u) \div(v) at quad points
-ela_lambda_stiff_at_quad_pnt = np.zeros((N_V * DIM, N_V * DIM, QUAD_PNTS))
-# Element integral \int \div(u)  \div(v)
-elem_ela_lambda_stiff_mat = np.zeros((N_V * DIM, N_V * DIM))
-for loc_dof_i, loc_dof_j in product(range(N_V * DIM), range(N_V * DIM)):
+ela_lambda_stiff_at_quad_pnt = np.zeros((N_V * 2, N_V * 2, QUAD_PNTS))
+for loc_dof_i, loc_dof_j in product(range(N_V * 2), range(N_V * 2)):
     ela_mu_stiff_at_quad_pnt[loc_dof_i, loc_dof_j, :] = (
         strain_val_at_quad_pnt[loc_dof_i, 0, :]
         * strain_val_at_quad_pnt[loc_dof_j, 0, :]
         + strain_val_at_quad_pnt[loc_dof_i, 1, :]
         * strain_val_at_quad_pnt[loc_dof_j, 1, :]
-        + 2
+        + 2.0
         * strain_val_at_quad_pnt[loc_dof_i, 2, :]
         * strain_val_at_quad_pnt[loc_dof_j, 2, :]
     )
     ela_lambda_stiff_at_quad_pnt[loc_dof_i, loc_dof_j, :] = (
         div_val_at_quad_pnt[loc_dof_i, :] * div_val_at_quad_pnt[loc_dof_j, :]
     )
+# Element integral \int \varepsilon(u) : \varepsilon(v)
 elem_ela_mu_stiff_mat = ela_mu_stiff_at_quad_pnt @ quad_wghts
+# Element integral \int \div(u)  \div(v)
 elem_ela_lambda_stiff_mat = ela_lambda_stiff_at_quad_pnt @ quad_wghts
 
 
@@ -191,10 +189,13 @@ class Solver:
         self.lamb_3d = self.E * self.nu / ((1.0 + self.nu) * (1.0 - 2.0 * self.nu))
         self.mu = self.E / (2.0 * (1.0 + self.nu))
 
+        # the function k contains "if"
+        self.k_vec = np.vectorize(self.k)
+
         self.h = 1.0 / N
         self.tau = 1.0 / steps
-        self.dof_phi_theta_num = 2 * (N + 1) ** DIM
-        self.dof_ela_num = DIM * (N - 1) ** DIM
+        self.dof_phi_theta_num = 2 * (N + 1) ** 2
+        self.dof_ela_num = 2 * (N - 1) ** 2
 
         max_data_len = self.N * self.N * N_V**2
         II = -np.ones((max_data_len,), dtype=np.int32)
@@ -237,6 +238,35 @@ class Solver:
         self.phi_source_func = lambda x, y, t: 0.0
         self.theta_source_func = lambda x, y, t: 0.0
         self.u_source_func = lambda x, y, t: 0.0, 0.0
+
+        # Print the parameters
+        print("*" * 80)
+        print("This is a sav solver for a stereolithography model.")
+        print(
+            "Use N={:d}, steps={:d} => h={:.6e}, tau={:.6e}.".format(
+                self.N, self.steps, self.h, self.tau
+            )
+        )
+        print(
+            (
+                "In phase-temperature: alpha={:.6e}, lambda={:.6e}, epsilon={:.6e},\n"
+                + "                      gamma={:.6e}, theta_c={:.6e}, delta={:.6e}."
+            ).format(
+                self.alpha,
+                self.lambda_,
+                self.epsilon,
+                self.gamma,
+                self.theta_c,
+                self.delta,
+            )
+        )
+        print(
+            (
+                "In elasticity:        kappa={:.6e}, phi_gel={:.6e}, E={:.6e},\n"
+                + "                      nu={:.6e}, zeta={:.6e}, beta={:.6e}."
+            ).format(self.kappa, self.phi_gel, self.E, self.nu, self.zeta, self.beta)
+        )
+        print("*" * 80)
 
     # A quick way to get Q
     def get_Q(self, phi_theta: np.ndarray):
@@ -462,12 +492,11 @@ class Solver:
             return -1
         else:
             loc_nd_y, loc_nd_x = divmod(loc_nd, 2)
-        return (elem_ind_y + loc_nd_y - 1) * (self.N - 1) + elem_ind_x + loc_nd_x - 1
+            return (
+                (elem_ind_y + loc_nd_y - 1) * (self.N - 1) + elem_ind_x + loc_nd_x - 1
+            )
 
     def get_next_u(self, phi_theta: np.ndarray, phi_theta_0: np.ndarray, n: int):
-        # the function k contains "if"
-        k_vec = np.vectorize(self.k)
-
         max_data_len = self.N**2 * 64
         II = -np.ones(max_data_len, dtype=np.int32)
         JJ = -np.ones(max_data_len, dtype=np.int32)
@@ -486,9 +515,10 @@ class Solver:
             loc_phi = np.array([phi_theta[2 * loc_nd] for loc_nd in loc_nds])
             loc_theta = np.array([phi_theta[2 * loc_nd + 1] for loc_nd in loc_nds])
             loc_theta_0 = np.array([phi_theta_0[2 * loc_nd + 1] for loc_nd in loc_nds])
+            phi_at_quad_pnt = loc_phi @ basis_val_at_quad_pnt
 
-            k_phi_at_quad_pnt = k_vec(loc_phi @ basis_val_at_quad_pnt)
-            m_phi_at_quad_pnt = self.m(loc_phi @ basis_val_at_quad_pnt)
+            k_phi_at_quad_pnt = self.k_vec(phi_at_quad_pnt)
+            m_phi_at_quad_pnt = self.m(phi_at_quad_pnt)
             theta_theta_0_at_quad_pnt = (
                 loc_theta - loc_theta_0
             ) @ basis_val_at_quad_pnt
