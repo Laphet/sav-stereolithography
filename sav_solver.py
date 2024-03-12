@@ -125,6 +125,14 @@ elem_ela_mu_stiff_mat = ela_mu_stiff_at_quad_pnt @ quad_wghts
 elem_ela_lambda_stiff_mat = ela_lambda_stiff_at_quad_pnt @ quad_wghts
 
 
+def zero_source(x, y, t):
+    return 0.0
+
+
+def zero_source_2d(x, y, t):
+    return 0.0, 0.0
+
+
 class Solver:
     @staticmethod
     def W_func(x):
@@ -235,9 +243,9 @@ class Solver:
 
         # phi_source_func, theta_source_func
         # To construct the exact solution
-        self.phi_source_func = lambda x, y, t: 0.0
-        self.theta_source_func = lambda x, y, t: 0.0
-        self.u_source_func = lambda x, y, t: 0.0, 0.0
+        self.phi_source_func = zero_source
+        self.theta_source_func = zero_source
+        self.u_source_func = zero_source_2d
 
         # Print the parameters
         print("*" * 80)
