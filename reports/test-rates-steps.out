@@ -1,0 +1,282 @@
+Sender: LSF System <lsfadmin@c1u05n01>
+Subject: Job 510632: <sav> in cluster <cluster1> Done
+
+Job <sav> was submitted from host <ln02> by user <cjz> in cluster <cluster1> at Mon Mar 11 15:31:10 2024
+Job was executed on host(s) <36*c1u05n01>, in queue <batch>, as user <cjz> in cluster <cluster1> at Mon Mar 11 15:31:02 2024
+</share/home/cjz> was used as the home directory.
+</share/home/cjz/cqye/sav-stereolithography> was used as the working directory.
+Started at Mon Mar 11 15:31:02 2024
+Terminated at Mon Mar 11 21:58:34 2024
+Results reported at Mon Mar 11 21:58:34 2024
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#BSUB -J sav
+#BSUB -n 36
+#BSUB -o logs/%J.lsf.out
+#BSUB -e logs/%J.lsf.err
+#BSUB -W 1440
+#BSUB -q batch
+#BSUB -R "span[ptile=36]"
+
+cd ${LS_SUBCWD}
+# set OMP_NUM_THREADS _and_ export! 
+OMP_NUM_THREADS=$LSB_DJOB_NUMPROC 
+export OMP_NUM_THREADS
+
+python test_rates.py
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   59034.40 sec.
+    Max Memory :                                 757 MB
+    Average Memory :                             434.46 MB
+    Total Requested Memory :                     -
+    Delta Memory :                               -
+    Max Swap :                                   2 MB
+    Max Processes :                              4
+    Max Threads :                                40
+    Run time :                                   23252 sec.
+    Turnaround time :                            23244 sec.
+
+The output (if any) follows:
+
+********************************************************************************
+This is a sav solver for a stereolithography model.
+Use N=100, steps=10 => h=1.000000e-02, tau=1.000000e-01.
+In phase-temperature: alpha=1.000000e+00, lambda=1.000000e+00, epsilon=1.000000e-01,
+                      gamma=1.000000e+00, theta_c=0.000000e+00, delta=1.200000e+00.
+In elasticity:        kappa=1.000000e-02, phi_gel=5.000000e-01, E=1.000000e+00,
+                      nu=3.000000e-01, zeta=1.000000e+00, beta=5.000000e-01.
+********************************************************************************
+11/03/2024 15:31:19	progress:  10%
+11/03/2024 15:31:34	progress:  20%
+11/03/2024 15:31:48	progress:  30%
+11/03/2024 15:32:03	progress:  40%
+11/03/2024 15:32:18	progress:  50%
+11/03/2024 15:32:32	progress:  60%
+11/03/2024 15:32:47	progress:  70%
+11/03/2024 15:33:02	progress:  80%
+11/03/2024 15:33:16	progress:  90%
+11/03/2024 15:33:31	progress: 100%
+Max error phi:  	in l_2=2.915411e-02, in h_1=2.378970e-01
+Max error theta:	in l_2=1.499161e-03, in h_1=1.054052e-02
+Max error ux:   	in l_2=2.381746e-03, in h_1=2.880946e-02
+Max error uy:   	in l_2=2.391191e-03, in h_1=2.742575e-02
+********************************************************************************
+This is a sav solver for a stereolithography model.
+Use N=100, steps=20 => h=1.000000e-02, tau=5.000000e-02.
+In phase-temperature: alpha=1.000000e+00, lambda=1.000000e+00, epsilon=1.000000e-01,
+                      gamma=1.000000e+00, theta_c=0.000000e+00, delta=1.200000e+00.
+In elasticity:        kappa=1.000000e-02, phi_gel=5.000000e-01, E=1.000000e+00,
+                      nu=3.000000e-01, zeta=1.000000e+00, beta=5.000000e-01.
+********************************************************************************
+11/03/2024 15:33:46	progress:   5%
+11/03/2024 15:34:15	progress:  15%
+11/03/2024 15:34:44	progress:  25%
+11/03/2024 15:35:13	progress:  35%
+11/03/2024 15:35:42	progress:  45%
+11/03/2024 15:36:11	progress:  55%
+11/03/2024 15:36:41	progress:  65%
+11/03/2024 15:37:10	progress:  75%
+11/03/2024 15:37:24	progress:  80%
+11/03/2024 15:37:54	progress:  90%
+11/03/2024 15:38:23	progress: 100%
+Max error phi:  	in l_2=1.811256e-02, in h_1=1.460394e-01
+Max error theta:	in l_2=9.696206e-04, in h_1=6.809596e-03
+Max error ux:   	in l_2=1.463326e-03, in h_1=1.740908e-02
+Max error uy:   	in l_2=1.284322e-03, in h_1=1.481681e-02
+********************************************************************************
+This is a sav solver for a stereolithography model.
+Use N=100, steps=40 => h=1.000000e-02, tau=2.500000e-02.
+In phase-temperature: alpha=1.000000e+00, lambda=1.000000e+00, epsilon=1.000000e-01,
+                      gamma=1.000000e+00, theta_c=0.000000e+00, delta=1.200000e+00.
+In elasticity:        kappa=1.000000e-02, phi_gel=5.000000e-01, E=1.000000e+00,
+                      nu=3.000000e-01, zeta=1.000000e+00, beta=5.000000e-01.
+********************************************************************************
+11/03/2024 15:38:38	progress:   2%
+11/03/2024 15:39:36	progress:  12%
+11/03/2024 15:40:34	progress:  22%
+11/03/2024 15:41:32	progress:  32%
+11/03/2024 15:42:30	progress:  42%
+11/03/2024 15:43:28	progress:  52%
+11/03/2024 15:44:26	progress:  62%
+11/03/2024 15:45:24	progress:  72%
+11/03/2024 15:46:07	progress:  80%
+11/03/2024 15:47:06	progress:  90%
+11/03/2024 15:48:04	progress: 100%
+Max error phi:  	in l_2=1.038472e-02, in h_1=8.316345e-02
+Max error theta:	in l_2=5.872307e-04, in h_1=4.104746e-03
+Max error ux:   	in l_2=1.168457e-03, in h_1=1.413857e-02
+Max error uy:   	in l_2=1.147758e-03, in h_1=1.212160e-02
+********************************************************************************
+This is a sav solver for a stereolithography model.
+Use N=100, steps=80 => h=1.000000e-02, tau=1.250000e-02.
+In phase-temperature: alpha=1.000000e+00, lambda=1.000000e+00, epsilon=1.000000e-01,
+                      gamma=1.000000e+00, theta_c=0.000000e+00, delta=1.200000e+00.
+In elasticity:        kappa=1.000000e-02, phi_gel=5.000000e-01, E=1.000000e+00,
+                      nu=3.000000e-01, zeta=1.000000e+00, beta=5.000000e-01.
+********************************************************************************
+11/03/2024 15:48:19	progress:   1%
+11/03/2024 15:50:15	progress:  11%
+11/03/2024 15:52:11	progress:  21%
+11/03/2024 15:54:07	progress:  31%
+11/03/2024 15:56:03	progress:  41%
+11/03/2024 15:57:59	progress:  51%
+11/03/2024 15:59:55	progress:  61%
+11/03/2024 16:01:52	progress:  71%
+11/03/2024 16:03:33	progress:  80%
+11/03/2024 16:05:29	progress:  90%
+11/03/2024 16:07:25	progress: 100%
+Max error phi:  	in l_2=5.676969e-03, in h_1=4.521902e-02
+Max error theta:	in l_2=3.488837e-04, in h_1=2.404635e-03
+Max error ux:   	in l_2=1.128627e-03, in h_1=1.348336e-02
+Max error uy:   	in l_2=9.411658e-04, in h_1=9.811471e-03
+********************************************************************************
+This is a sav solver for a stereolithography model.
+Use N=100, steps=160 => h=1.000000e-02, tau=6.250000e-03.
+In phase-temperature: alpha=1.000000e+00, lambda=1.000000e+00, epsilon=1.000000e-01,
+                      gamma=1.000000e+00, theta_c=0.000000e+00, delta=1.200000e+00.
+In elasticity:        kappa=1.000000e-02, phi_gel=5.000000e-01, E=1.000000e+00,
+                      nu=3.000000e-01, zeta=1.000000e+00, beta=5.000000e-01.
+********************************************************************************
+11/03/2024 16:07:40	progress:   1%
+11/03/2024 16:11:33	progress:  11%
+11/03/2024 16:15:26	progress:  21%
+11/03/2024 16:19:19	progress:  31%
+11/03/2024 16:23:11	progress:  41%
+11/03/2024 16:27:04	progress:  51%
+11/03/2024 16:30:56	progress:  61%
+11/03/2024 16:34:49	progress:  71%
+11/03/2024 16:38:27	progress:  80%
+11/03/2024 16:42:19	progress:  90%
+11/03/2024 16:46:11	progress: 100%
+Max error phi:  	in l_2=3.058628e-03, in h_1=2.416271e-02
+Max error theta:	in l_2=2.215250e-04, in h_1=1.478892e-03
+Max error ux:   	in l_2=1.062862e-03, in h_1=1.319779e-02
+Max error uy:   	in l_2=8.462341e-04, in h_1=9.313735e-03
+********************************************************************************
+This is a sav solver for a stereolithography model.
+Use N=200, steps=10 => h=5.000000e-03, tau=1.000000e-01.
+In phase-temperature: alpha=1.000000e+00, lambda=1.000000e+00, epsilon=1.000000e-01,
+                      gamma=1.000000e+00, theta_c=0.000000e+00, delta=1.200000e+00.
+In elasticity:        kappa=1.000000e-02, phi_gel=5.000000e-01, E=1.000000e+00,
+                      nu=3.000000e-01, zeta=1.000000e+00, beta=5.000000e-01.
+********************************************************************************
+11/03/2024 16:47:11	progress:  10%
+11/03/2024 16:48:10	progress:  20%
+11/03/2024 16:49:09	progress:  30%
+11/03/2024 16:50:08	progress:  40%
+11/03/2024 16:51:07	progress:  50%
+11/03/2024 16:52:07	progress:  60%
+11/03/2024 16:53:05	progress:  70%
+11/03/2024 16:54:04	progress:  80%
+11/03/2024 16:55:03	progress:  90%
+11/03/2024 16:56:02	progress: 100%
+Max error phi:  	in l_2=2.904228e-02, in h_1=2.370721e-01
+Max error theta:	in l_2=1.467710e-03, in h_1=1.031966e-02
+Max error ux:   	in l_2=2.397038e-03, in h_1=2.915485e-02
+Max error uy:   	in l_2=2.382869e-03, in h_1=2.765221e-02
+********************************************************************************
+This is a sav solver for a stereolithography model.
+Use N=200, steps=20 => h=5.000000e-03, tau=5.000000e-02.
+In phase-temperature: alpha=1.000000e+00, lambda=1.000000e+00, epsilon=1.000000e-01,
+                      gamma=1.000000e+00, theta_c=0.000000e+00, delta=1.200000e+00.
+In elasticity:        kappa=1.000000e-02, phi_gel=5.000000e-01, E=1.000000e+00,
+                      nu=3.000000e-01, zeta=1.000000e+00, beta=5.000000e-01.
+********************************************************************************
+11/03/2024 16:57:03	progress:   5%
+11/03/2024 16:59:01	progress:  15%
+11/03/2024 17:00:59	progress:  25%
+11/03/2024 17:02:58	progress:  35%
+11/03/2024 17:04:56	progress:  45%
+11/03/2024 17:06:54	progress:  55%
+11/03/2024 17:08:52	progress:  65%
+11/03/2024 17:10:50	progress:  75%
+11/03/2024 17:11:49	progress:  80%
+11/03/2024 17:13:47	progress:  90%
+11/03/2024 17:15:45	progress: 100%
+Max error phi:  	in l_2=1.799118e-02, in h_1=1.451409e-01
+Max error theta:	in l_2=9.415887e-04, in h_1=6.616916e-03
+Max error ux:   	in l_2=1.475255e-03, in h_1=1.647841e-02
+Max error uy:   	in l_2=1.247430e-03, in h_1=1.444093e-02
+********************************************************************************
+This is a sav solver for a stereolithography model.
+Use N=200, steps=40 => h=5.000000e-03, tau=2.500000e-02.
+In phase-temperature: alpha=1.000000e+00, lambda=1.000000e+00, epsilon=1.000000e-01,
+                      gamma=1.000000e+00, theta_c=0.000000e+00, delta=1.200000e+00.
+In elasticity:        kappa=1.000000e-02, phi_gel=5.000000e-01, E=1.000000e+00,
+                      nu=3.000000e-01, zeta=1.000000e+00, beta=5.000000e-01.
+********************************************************************************
+11/03/2024 17:16:45	progress:   2%
+11/03/2024 17:20:42	progress:  12%
+11/03/2024 17:24:39	progress:  22%
+11/03/2024 17:29:12	progress:  32%
+11/03/2024 17:33:51	progress:  42%
+11/03/2024 17:38:29	progress:  52%
+11/03/2024 17:43:07	progress:  62%
+11/03/2024 17:47:46	progress:  72%
+11/03/2024 17:51:15	progress:  80%
+11/03/2024 17:55:53	progress:  90%
+11/03/2024 18:00:32	progress: 100%
+Max error phi:  	in l_2=1.025410e-02, in h_1=8.221197e-02
+Max error theta:	in l_2=5.572133e-04, in h_1=3.909043e-03
+Max error ux:   	in l_2=8.327439e-04, in h_1=9.275729e-03
+Max error uy:   	in l_2=6.693140e-04, in h_1=7.761173e-03
+********************************************************************************
+This is a sav solver for a stereolithography model.
+Use N=200, steps=80 => h=5.000000e-03, tau=1.250000e-02.
+In phase-temperature: alpha=1.000000e+00, lambda=1.000000e+00, epsilon=1.000000e-01,
+                      gamma=1.000000e+00, theta_c=0.000000e+00, delta=1.200000e+00.
+In elasticity:        kappa=1.000000e-02, phi_gel=5.000000e-01, E=1.000000e+00,
+                      nu=3.000000e-01, zeta=1.000000e+00, beta=5.000000e-01.
+********************************************************************************
+11/03/2024 18:01:37	progress:   1%
+11/03/2024 18:09:29	progress:  11%
+11/03/2024 18:17:21	progress:  21%
+11/03/2024 18:25:13	progress:  31%
+11/03/2024 18:33:06	progress:  41%
+11/03/2024 18:40:59	progress:  51%
+11/03/2024 18:48:52	progress:  61%
+11/03/2024 18:56:45	progress:  71%
+11/03/2024 19:03:39	progress:  80%
+11/03/2024 19:11:31	progress:  90%
+11/03/2024 19:19:24	progress: 100%
+Max error phi:  	in l_2=5.535279e-03, in h_1=4.422238e-02
+Max error theta:	in l_2=3.108106e-04, in h_1=2.172408e-03
+Max error ux:   	in l_2=5.274306e-04, in h_1=5.622096e-03
+Max error uy:   	in l_2=4.882817e-04, in h_1=5.207026e-03
+********************************************************************************
+This is a sav solver for a stereolithography model.
+Use N=200, steps=160 => h=5.000000e-03, tau=6.250000e-03.
+In phase-temperature: alpha=1.000000e+00, lambda=1.000000e+00, epsilon=1.000000e-01,
+                      gamma=1.000000e+00, theta_c=0.000000e+00, delta=1.200000e+00.
+In elasticity:        kappa=1.000000e-02, phi_gel=5.000000e-01, E=1.000000e+00,
+                      nu=3.000000e-01, zeta=1.000000e+00, beta=5.000000e-01.
+********************************************************************************
+11/03/2024 19:20:24	progress:   1%
+11/03/2024 19:36:09	progress:  11%
+11/03/2024 19:51:54	progress:  21%
+11/03/2024 20:07:40	progress:  31%
+11/03/2024 20:23:24	progress:  41%
+11/03/2024 20:39:08	progress:  51%
+11/03/2024 20:54:52	progress:  61%
+11/03/2024 21:10:36	progress:  71%
+11/03/2024 21:25:20	progress:  80%
+11/03/2024 21:41:02	progress:  90%
+11/03/2024 21:58:33	progress: 100%
+Max error phi:  	in l_2=2.901183e-03, in h_1=2.311668e-02
+Max error theta:	in l_2=1.690624e-04, in h_1=1.172467e-03
+Max error ux:   	in l_2=4.182777e-04, in h_1=5.120980e-03
+Max error uy:   	in l_2=3.826997e-04, in h_1=3.949395e-03
+
+
+PS:
+
+Read file <logs/510632.lsf.err> for stderr output of this job.
+
