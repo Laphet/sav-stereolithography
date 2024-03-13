@@ -1,7 +1,14 @@
 from itertools import product
 import numpy as np
 from scipy.sparse import csc_matrix
-from scipy.sparse.linalg import spsolve
+
+# The default sparse solver in scipy is superLU, with optional interfaces to UMFPACK.
+# All those solvers are not parallelized.
+# from scipy.sparse.linalg import spsolve
+# Try to use the parallelized solver in the mkl library (Pardiso).
+import pypardiso
+
+spsolve = pypardiso.spsolve
 
 
 QUAD_ORDER = 2

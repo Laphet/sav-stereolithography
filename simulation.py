@@ -39,7 +39,7 @@ def fixed_heat_source(x, y, t):
 
 ref_alpha = 1.0
 ref_lambda_ = 1.0
-ref_epsilon = 1e-2
+ref_epsilon = 2.0e-2
 ref_gamma = 1.0
 ref_theta_c = 5.0
 ref_delta = 1.2
@@ -52,7 +52,7 @@ ref_zeta = 1.0e3
 ref_beta = 0.5e3
 
 N = 400
-steps = 500
+steps = 100
 
 sav_solver = Solver(
     N,
@@ -71,7 +71,8 @@ sav_solver = Solver(
     ref_beta,
 )
 # Use moving_heat_source or fixed_heat_source
-sav_solver.theta_source_func = fixed_heat_source
+# sav_solver.theta_source_func = fixed_heat_source
+sav_solver.theta_source_func = moving_heat_source
 
 data_to_save = np.zeros(
     (steps, 2, max(sav_solver.dof_phi_theta_num, sav_solver.dof_ela_num))
@@ -111,4 +112,5 @@ for i in range(1, sav_solver.steps + 1):
     q_ = q
     phi_theta_ = phi_theta
 
-np.save("{0:s}/{1:s}".format("resources", "fixed-heat-source"), data_to_save)
+# np.save("{0:s}/{1:s}".format("resources", "fixed-heat-source"), data_to_save)
+np.save("{0:s}/{1:s}".format("resources", "moving-heat-source"), data_to_save)
