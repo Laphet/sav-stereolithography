@@ -207,10 +207,10 @@ class Solver:
         # the function k contains "if"
         self.k_vec = np.vectorize(self.k)
 
-        self.h = 1.0 / N
-        self.tau = 1.0 / steps
-        self.dof_phi_theta_num = 2 * (N + 1) ** 2
-        self.dof_ela_num = 2 * (N - 1) ** 2
+        self.h = 1.0 / self.N
+        self.tau = 1.0 / self.steps
+        self.dof_phi_theta_num = 2 * (self.N + 1) ** 2
+        self.dof_ela_num = 2 * (self.N - 1) ** 2
 
         max_data_len = self.N * self.N * N_V**2
         II = -np.ones((max_data_len,), dtype=np.int32)

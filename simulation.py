@@ -1,13 +1,12 @@
 import numpy as np
-from itertools import product
 from sav_solver import Solver
 from datetime import datetime
 
-w_0 = 0.01
-I_max = 10.0
+w_0 = 1.0e-2
+I_max = 1.0e2
 t_check_pnts = [0.25, 0.5, 0.75]
 coord_pnts = np.array(
-    [[0.25, 0.5 + 1.0 / 3], [0.5, 0.5], [0.5, 0.5 - 1.0 / 3], [0.5, 0.5 + 1.0 / 3]]
+    [[0.25, 0.5 + 1.0 / 3], [0.5, 0.5], [0.5, 0.5 - 1.0 / 3], [0.75, 0.5 + 1.0 / 3]]
 )
 
 
@@ -41,7 +40,7 @@ ref_alpha = 1.0
 ref_lambda_ = 1.0
 ref_epsilon = 2.0e-2
 ref_gamma = 1.0
-ref_theta_c = 5.0
+ref_theta_c = 1.0
 ref_delta = 1.2
 
 ref_kappa = 1.0e-6
@@ -71,11 +70,29 @@ sav_solver = Solver(
     ref_beta,
 )
 # Use moving_heat_source or fixed_heat_source
-# sav_solver.theta_source_func = fixed_heat_source
-sav_solver.theta_source_func = moving_heat_source
+sav_solver.theta_source_func = fixed_heat_source
+# sav_solver.theta_source_func = moving_heat_source
 
 data_to_save = np.zeros(
-    (steps, 2, max(sav_solver.dof_phi_theta_num, sav_solver.dof_ela_num))
+    (steps + 1, 2, max(sav_solver.dof_phi_theta_num, sav_solver.dof_ela_num))
+)
+data_to_save[-1, 0, :14] = np.array(
+    [
+        sav_solver.alpha,
+        sav_solver.lambda_,
+        sav_solver.epsilon,
+        sav_solver.gamma,
+        sav_solver.theta_c,
+        sav_solver.delta,
+        sav_solver.kappa,
+        sav_solver.phi_gel,
+        sav_solver.E,
+        sav_solver.nu,
+        sav_solver.zeta,
+        sav_solver.beta,
+        w_0,
+        I_max,
+    ]
 )
 
 # Initial condition
@@ -112,5 +129,5 @@ for i in range(1, sav_solver.steps + 1):
     q_ = q
     phi_theta_ = phi_theta
 
-# np.save("{0:s}/{1:s}".format("resources", "fixed-heat-source"), data_to_save)
-np.save("{0:s}/{1:s}".format("resources", "moving-heat-source"), data_to_save)
+np.save("{0:s}/{1:s}".format("resources", "fixed-heat-source"), data_to_save)
+# np.save("{0:s}/{1:s}".format("resources", "moving-heat-source"), data_to_save)
