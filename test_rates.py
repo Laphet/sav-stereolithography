@@ -96,14 +96,14 @@ def ref_k_phi(phi):
 
 
 def ref_z_phi(phi):
-    return ref_kappa + (1.0 - ref_k_phi(phi)) * (1.0 - ref_kappa)
+    return ref_kappa * ref_k_phi(phi) + 1.0 - ref_kappa
 
 
 def ref_d_z_phi(phi):
     if phi <= ref_phi_gel:
         return 0.0
     else:
-        return -(1.0 - ref_kappa) / (1.0 - ref_phi_gel)
+        return ref_kappa / (1.0 - ref_phi_gel)
 
 
 def ref_ux_func(x, y, t):

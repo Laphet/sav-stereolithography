@@ -147,25 +147,32 @@ class Solver:
 
     @staticmethod
     def W_prime_func(x):
-        return x**3 - x
+        if -1.0 <= x <= 1.0:
+            return x**3 - x
+        else:
+            return 0.0
 
     @staticmethod
     def P_func(x):
         return 0.5 * (1.0 - x)
 
     # p is the derivative of P
+    # The original definition in the paper need to be corrected.
     @staticmethod
     def p_func(x):
-        return -0.5
+        if -1.0 <= x <= 1.0:
+            return -0.5
+        else:
+            return 0.0
 
-    def k(self, phi):
+    def k_func(self, phi):
         if phi <= self.phi_gel:
             return 0.0
         else:
             return (phi - self.phi_gel) / (1.0 - self.phi_gel)
 
     # m = zeta * (1 - P)
-    def m(self, x):
+    def m_func(self, x):
         return (x + 1.0) * 0.5 * self.zeta
 
     def __init__(
@@ -204,8 +211,12 @@ class Solver:
         self.lamb_3d = self.E * self.nu / ((1.0 + self.nu) * (1.0 - 2.0 * self.nu))
         self.mu = self.E / (2.0 * (1.0 + self.nu))
 
-        # the function k contains "if"
-        self.k_vec = np.vectorize(self.k)
+        # The function k contains "if"
+        self.k_func_vec = np.vectorize(self.k_func)
+        # The function p_func contains "if"
+        self.p_func_vec = np.vectorize(self.p_func)
+        # The function W_prime_func contains "if"
+        self.W_prime_func_vec = np.vectorize(self.W_prime_func)
 
         self.h = 1.0 / self.N
         self.tau = 1.0 / self.steps
@@ -315,7 +326,7 @@ class Solver:
             ]
             loc_phi_ = np.array([phi_theta_[2 * loc_nd] for loc_nd in loc_nds])
             loc_theta_ = np.array([phi_theta_[2 * loc_nd + 1] for loc_nd in loc_nds])
-            W_prime_phi_at_quad_pnt = self.W_prime_func(
+            W_prime_phi_at_quad_pnt = self.W_prime_func_vec(
                 loc_phi_ @ basis_val_at_quad_pnt
             )
             loc_phi_source = np.array(
@@ -354,7 +365,7 @@ class Solver:
                     ),
                 ]
             )
-            p_phi_at_quad_pnt = self.p_func(loc_phi_ @ basis_val_at_quad_pnt)
+            p_phi_at_quad_pnt = self.p_func_vec(loc_phi_ @ basis_val_at_quad_pnt)
             for loc_nd_row in range(N_V):
                 for loc_nd_col in range(N_V):
                     # A_{phi, phi}
@@ -532,12 +543,12 @@ class Solver:
             loc_theta_0 = np.array([phi_theta_0[2 * loc_nd + 1] for loc_nd in loc_nds])
             phi_at_quad_pnt = loc_phi @ basis_val_at_quad_pnt
 
-            k_phi_at_quad_pnt = self.k_vec(phi_at_quad_pnt)
-            m_phi_at_quad_pnt = self.m(phi_at_quad_pnt)
+            k_phi_at_quad_pnt = self.k_func_vec(phi_at_quad_pnt)
+            m_phi_at_quad_pnt = self.m_func(phi_at_quad_pnt)
             theta_theta_0_at_quad_pnt = (
                 loc_theta - loc_theta_0
             ) @ basis_val_at_quad_pnt
-            z_at_quad_pnt = self.kappa + (1.0 - k_phi_at_quad_pnt) * (1.0 - self.kappa)
+            z_at_quad_pnt = self.kappa * k_phi_at_quad_pnt + 1.0 - k_phi_at_quad_pnt
 
             loc_u_source = np.array(
                 [
@@ -692,3 +703,11 @@ class Solver:
         )
         u = spsolve(A_mat, rhs)
         return u
+
+    def cut_phi(self, phi_theta: np.ndarray):
+        for j, i in product(range(self.N + 1), range(self.N + 1)):
+            nd_ind = j * (self.N + 1) + i
+            if phi_theta[2 * nd_ind] < -1.0:
+                phi_theta[2 * nd_ind] = -1.0
+            elif phi_theta[2 * nd_ind] > 1.0:
+                phi_theta[2 * nd_ind] = 1.0

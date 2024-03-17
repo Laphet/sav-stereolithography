@@ -1,17 +1,8 @@
 import plot_settings
 import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from simulation import N, steps
 
-
-data_moving = np.load(
-    "{0:s}/{1:s}.npy".format(plot_settings.FIGS_ROOT_PATH, "moving-heat-source")
-)
-data_fixed = np.load(
-    "{0:s}/{1:s}.npy".format(plot_settings.FIGS_ROOT_PATH, "fixed-heat-source")
-)
-
-N = 400
-steps = 100
 dof_phi_theta_num = 2 * (N + 1) ** 2
 dof_ela_num = 2 * (N - 1) ** 2
 
@@ -29,25 +20,30 @@ def get_phi_theta_ux_uy(data, i):
     return phi, theta, ux, uy
 
 
-# data = data_fixed
-# file_name_prefix = "fixed-heat-source"
-data = data_moving
 file_name_prefix = "moving-heat-source"
+# file_name_prefix = "fixed-heat-source"
+file_name_postfix = "r2"
+data = np.load(
+    "{0:s}/{1:s}-{2:s}.npy".format(
+        plot_settings.FIGS_ROOT_PATH, file_name_prefix, file_name_postfix
+    )
+)
+
 
 fig = plot_settings.plt.figure(
     figsize=(0.25 * plot_settings.A4_WIDTH, 0.35 * plot_settings.A4_WIDTH),
     layout="constrained",
 )
-for i in range(0, steps, 10):
+for i in range(0, steps, 2):
     t = (i + 1) / steps
     phi, theta, ux, uy = get_phi_theta_ux_uy(data, i)
 
     # Phi
     ax = fig.add_subplot()
-    posi = plot_settings.plot_node_dat(phi, ax, [-0.5, 0.5])
+    posi = plot_settings.plot_node_dat(phi, ax, [-1.0, 1.0])
     cbar = plot_settings.append_colorbar(fig, ax, posi)
-    ax.set_xlabel("$x_1$")
-    ax.set_ylabel("$x_2$")
+    ax.set_xlabel("$x$")
+    ax.set_ylabel("$y$")
     ax.set_xticks([0.0, 1.0], ["0.0", "1.0"])
     ax.xaxis.set_label_coords(0.5, -0.1)
     ax.set_yticks([0.0, 1.0], ["0.0", "1.0"])
@@ -61,59 +57,59 @@ for i in range(0, steps, 10):
     )
     fig.clear()
 
-    # Theta
-    ax = fig.add_subplot()
-    posi = plot_settings.plot_node_dat(theta, ax)
-    cbar = plot_settings.append_colorbar(fig, ax, posi)
-    ax.set_xlabel("$x_1$")
-    ax.set_ylabel("$x_2$")
-    ax.set_xticks([0.0, 1.0], ["0.0", "1.0"])
-    ax.xaxis.set_label_coords(0.5, -0.1)
-    ax.set_yticks([0.0, 1.0], ["0.0", "1.0"])
-    ax.yaxis.set_label_coords(-0.1, 0.5)
-    fig.suptitle(r"$\theta$ at $t={:.2f}$".format(t))
-    fig.savefig(
-        "{0:s}/{1:s}-{2:s}-{3:03d}.png".format(
-            plot_settings.FIGS_ROOT_PATH, file_name_prefix, "theta", i
-        ),
-        dpi=plot_settings.DPI,
-    )
-    fig.clear()
+    # # Theta
+    # ax = fig.add_subplot()
+    # posi = plot_settings.plot_node_dat(theta, ax)
+    # cbar = plot_settings.append_colorbar(fig, ax, posi)
+    # ax.set_xlabel("$x$")
+    # ax.set_ylabel("$y$")
+    # ax.set_xticks([0.0, 1.0], ["0.0", "1.0"])
+    # ax.xaxis.set_label_coords(0.5, -0.1)
+    # ax.set_yticks([0.0, 1.0], ["0.0", "1.0"])
+    # ax.yaxis.set_label_coords(-0.1, 0.5)
+    # fig.suptitle(r"$\theta$ at $t={:.2f}$".format(t))
+    # fig.savefig(
+    #     "{0:s}/{1:s}-{2:s}-{3:03d}.png".format(
+    #         plot_settings.FIGS_ROOT_PATH, file_name_prefix, "theta", i
+    #     ),
+    #     dpi=plot_settings.DPI,
+    # )
+    # fig.clear()
 
-    # ux
-    ax = fig.add_subplot()
-    posi = plot_settings.plot_node_dat(ux, ax)
-    cbar = plot_settings.append_colorbar(fig, ax, posi)
-    ax.set_xlabel("$x_1$")
-    ax.set_ylabel("$x_2$")
-    ax.set_xticks([0.0, 1.0], ["0.0", "1.0"])
-    ax.xaxis.set_label_coords(0.5, -0.1)
-    ax.set_yticks([0.0, 1.0], ["0.0", "1.0"])
-    ax.yaxis.set_label_coords(-0.1, 0.5)
-    fig.suptitle(r"$u_x$ at $t={:.2f}$".format(t))
-    fig.savefig(
-        "{0:s}/{1:s}-{2:s}-{3:03d}.png".format(
-            plot_settings.FIGS_ROOT_PATH, file_name_prefix, "ux", i
-        ),
-        dpi=plot_settings.DPI,
-    )
-    fig.clear()
+    # # ux
+    # ax = fig.add_subplot()
+    # posi = plot_settings.plot_node_dat(ux, ax)
+    # cbar = plot_settings.append_colorbar(fig, ax, posi)
+    # ax.set_xlabel("$x$")
+    # ax.set_ylabel("$y$")
+    # ax.set_xticks([0.0, 1.0], ["0.0", "1.0"])
+    # ax.xaxis.set_label_coords(0.5, -0.1)
+    # ax.set_yticks([0.0, 1.0], ["0.0", "1.0"])
+    # ax.yaxis.set_label_coords(-0.1, 0.5)
+    # fig.suptitle(r"$u_x$ at $t={:.2f}$".format(t))
+    # fig.savefig(
+    #     "{0:s}/{1:s}-{2:s}-{3:03d}.png".format(
+    #         plot_settings.FIGS_ROOT_PATH, file_name_prefix, "ux", i
+    #     ),
+    #     dpi=plot_settings.DPI,
+    # )
+    # fig.clear()
 
-    # uy
-    ax = fig.add_subplot()
-    posi = plot_settings.plot_node_dat(uy, ax)
-    cbar = plot_settings.append_colorbar(fig, ax, posi)
-    ax.set_xlabel("$x_1$")
-    ax.set_ylabel("$x_2$")
-    ax.set_xticks([0.0, 1.0], ["0.0", "1.0"])
-    ax.xaxis.set_label_coords(0.5, -0.1)
-    ax.set_yticks([0.0, 1.0], ["0.0", "1.0"])
-    ax.yaxis.set_label_coords(-0.1, 0.5)
-    fig.suptitle(r"$u_y$ at $t={:.2f}$".format(t))
-    fig.savefig(
-        "{0:s}/{1:s}-{2:s}-{3:03d}.png".format(
-            plot_settings.FIGS_ROOT_PATH, file_name_prefix, "uy", i
-        ),
-        dpi=plot_settings.DPI,
-    )
-    fig.clear()
+    # # uy
+    # ax = fig.add_subplot()
+    # posi = plot_settings.plot_node_dat(uy, ax)
+    # cbar = plot_settings.append_colorbar(fig, ax, posi)
+    # ax.set_xlabel("$x$")
+    # ax.set_ylabel("$y$")
+    # ax.set_xticks([0.0, 1.0], ["0.0", "1.0"])
+    # ax.xaxis.set_label_coords(0.5, -0.1)
+    # ax.set_yticks([0.0, 1.0], ["0.0", "1.0"])
+    # ax.yaxis.set_label_coords(-0.1, 0.5)
+    # fig.suptitle(r"$u_y$ at $t={:.2f}$".format(t))
+    # fig.savefig(
+    #     "{0:s}/{1:s}-{2:s}-{3:03d}.png".format(
+    #         plot_settings.FIGS_ROOT_PATH, file_name_prefix, "uy", i
+    #     ),
+    #     dpi=plot_settings.DPI,
+    # )
+    # fig.clear()
