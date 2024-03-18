@@ -37,7 +37,10 @@ def fixed_heat_source(x, y, t):
 
 ref_alpha = 0.5
 ref_lambda_ = 1.0
-ref_epsilon = 1.0e-2
+# For h = 1/400
+ref_epsilon = 0.5e-2
+# For h = 1/200
+# ref_epsilon = 1.0e-2
 ref_gamma = 4.0e2
 ref_theta_c = 1.0
 ref_delta = 1.0e2
@@ -49,7 +52,7 @@ ref_nu = 0.35
 ref_zeta = 1.0e3
 ref_beta = 0.5e3
 
-N = 200
+N = 400
 steps = 100
 
 if __name__ == "__main__":
